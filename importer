@@ -1,0 +1,35 @@
+import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
+
+urls = [
+    'https://www.python.org/',
+    'https://www.wikipedia.org/',
+    'https://www.openai.com/',
+    'https://www.github.com/',
+    'https://www.stackoverflow.com/'
+]
+
+async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+async def fetch_all(urls):
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for url in urls:
+            tasks.append(fetch(session, url))
+        return await asyncio.gather(*tasks)
+
+def get_title(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    return soup.title.string if soup.title else 'Заголовок не найден'
+
+async def main():
+    htmls = await fetch_all(urls)
+    for url, html in zip(urls, htmls):
+        title = get_title(html)
+        print(f"URL: {url}\nЗаголовок: {title}\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())
